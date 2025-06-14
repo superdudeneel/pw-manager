@@ -1,19 +1,48 @@
 
         // Mobile menu toggle
         const mobileMenu = document.getElementById('mobileMenu');
-        const mobileNav = document.querySelector('.mobile-nav');
-        
-        mobileMenu.addEventListener('click', () => {
+        const mobileNav = document.getElementById('mobileNav');
+        const navbar = document.getElementById('navbar');
+
+        // Toggle mobile menu
+        mobileMenu.addEventListener('click', function() {
             mobileMenu.classList.toggle('active');
             mobileNav.classList.toggle('active');
+            
+            // Prevent body scroll when menu is open
+            if (mobileNav.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
         });
 
-        // Close mobile menu when clicking a link
-        mobileNav.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
+        // Close mobile menu when clicking on a link
+        const mobileNavLinks = mobileNav.querySelectorAll('a');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', function() {
                 mobileMenu.classList.remove('active');
                 mobileNav.classList.remove('active');
+                document.body.style.overflow = 'auto';
             });
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!mobileMenu.contains(e.target) && !mobileNav.contains(e.target)) {
+                mobileMenu.classList.remove('active');
+                mobileNav.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        // Close mobile menu on window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                mobileMenu.classList.remove('active');
+                mobileNav.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
         });
 
         // Scroll animations
