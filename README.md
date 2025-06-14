@@ -29,7 +29,7 @@ A simple, secure password manager web application built with Node.js, Express, a
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/password-manager.git
+git clone https://github.com/superdudeneel/pw-manager.git
 cd password-manager
 touch .env
 npm install
