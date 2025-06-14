@@ -5,6 +5,9 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const dotenv = require('dotenv');
+const User = require('./models/Usermodel');
+const Password = require('./models/Passwordmodel');
+
 dotenv.config();
 
 const session = require('express-session');
@@ -30,7 +33,10 @@ app.use(session({
 }));
 
 mongoose
-    .connect(process.env.MONGO_URL)
+    .connect(process.env.MONGO_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    })
     .then(()=>{
         console.log("mongo db connected");
     })
@@ -39,55 +45,10 @@ mongoose
     })
 
 // User Schema
-const Userschema = new mongoose.Schema({
-    username: { type: String, required: true , unique: true},
-    email:    { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    resetToken: String,
-    resetTokenExpiration: Date,
-    master_password: { type: String },
-});
+
 
 // Password Schema - NEW
-const PasswordSchema = new mongoose.Schema({
-    userId: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'user2', 
-        required: true 
-    },
-    website: { 
-        type: String, 
-        required: true 
-    },
-    website_url:{
-        type: String,
-        required: true
-    },
-    username: { 
-        type: String, 
-        required: true 
-    },
-    password: {
-        ciphertext: [Number],
-        iv: [Number],
-        salt: [Number]
-    },
-    notes: { 
-        type: String, 
-        default: '' 
-    },
-    createdAt: { 
-        type: Date, 
-        default: Date.now 
-    },
-    updatedAt: { 
-        type: Date, 
-        default: Date.now 
-    }
-});
 
-const User = mongoose.model("user2", Userschema);
-const Password = mongoose.model("Password", PasswordSchema);
 
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
