@@ -97,6 +97,7 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({extended : false})); 
 app.use(express.json());
 app.use(express.static('templates'));
+app.use(express.static('public'));
 
 app.get("/", (req, res)=>{
     return res.sendFile(path.join(__dirname, 'templates/index.html'));
