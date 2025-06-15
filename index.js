@@ -289,7 +289,8 @@ app.post('/forgot-pass', async (req, res) => {
             resetTokenExpiration: resetTokenExpiration
         });
 
-        const resetLink = `http://localhost:8000/reset-password?token=${token}`;
+        const baseUrl = process.env.BASE_URL || 'http://localhost:8000';
+        const resetLink = `${baseUrl}/reset-password?token=${token}`;
 
         const mailoptions = {
             from: '"Neel from secure vault" <dudemrwonderful@gmail.com>',
