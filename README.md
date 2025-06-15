@@ -12,6 +12,7 @@ A simple, secure password manager web application built with Node.js, Express, a
 - 📋 Copy to clipboard feature
 - 🔐 Passwords encrypted in the database
 - 🕒 Session-based authentication
+- 🛡️ Breach Detection Enabled
 
 ---
 
