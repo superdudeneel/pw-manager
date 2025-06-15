@@ -1,4 +1,675 @@
+class BreachDetection {
+    constructor() {
+        this.isScanning = false;
+        this.scanProgress = 0;
+        this.breachData = [];
+        this.hibpApiKey = null; // Set this if you have a premium API key
+        this.init();
+    }
 
+    init() {
+        this.setupEventListeners();
+        this.loadBreachData();
+        this.updateStats();
+    }
+
+    setupEventListeners() {
+        // Navigation between tabs
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.nav-item')) {
+                const navItem = e.target.closest('.nav-item');
+                const text = navItem.querySelector('span')?.textContent;
+                
+                if (text === 'Detect Breaches') {
+                    this.showBreachDetection();
+                } else if (text === 'Passwords') {
+                    this.showPasswordManager();
+                }
+            }
+        });
+
+        // Scan button
+        const scanBtn = document.getElementById('scanBtn');
+        if (scanBtn) {
+            scanBtn.addEventListener('click', () => this.startScan());
+        }
+
+        // Rescan button
+        const rescanBtn = document.getElementById('rescanBtn');
+        if (rescanBtn) {
+            rescanBtn.addEventListener('click', () => this.startScan());
+        }
+    }
+
+    showBreachDetection() {
+        const passwordView = document.querySelector('.main-content');
+        if (passwordView) {
+            passwordView.style.display = 'none';
+        }
+
+        // Show breach detection view or create it
+        let breachView = document.querySelector('.breach-detection-view');
+        if (!breachView) {
+            breachView = this.createBreachDetectionView();
+            document.querySelector('.container').appendChild(breachView);
+        }
+        
+        breachView.style.display = 'block';
+        breachView.classList.add('active');
+
+        // Update navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector('.nav-item:nth-child(2)').classList.add('active');
+    }
+
+    showPasswordManager() {
+        // Hide breach detection view
+        const breachView = document.querySelector('.breach-detection-view');
+        if (breachView) {
+            breachView.style.display = 'none';
+            breachView.classList.remove('active');
+        }
+
+        // Show password manager
+        const passwordView = document.querySelector('.main-content');
+        if (passwordView) {
+            passwordView.style.display = 'block';
+        }
+
+        // Update navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector('.nav-item:first-child').classList.add('active');
+    }
+
+    createBreachDetectionView() {
+        const view = document.createElement('main');
+        view.className = 'breach-detection-view';
+        view.innerHTML = `
+            <div class="breach-hero">
+                <div class="breach-hero-icon">
+                    <i class="fas fa-shield-virus"></i>
+                </div>
+                <h2>Breach Detection</h2>
+                <p>Scan your passwords against known data breaches using Have I Been Pwned database. We check your credentials against millions of compromised passwords without exposing your data.</p>
+                <div class="hibp-attribution">
+                    <small>Powered by <a href="https://haveibeenpwned.com" target="_blank" rel="noopener" style = "color: white;">Have I Been Pwned</a></small>
+                </div>
+            </div>
+
+            <div class="breach-stats">
+                <div class="stat-card">
+                    <div class="stat-icon safe">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-number" id="safeCount">-</div>
+                    <div class="stat-label">Safe Passwords</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-number" id="warningCount">-</div>
+                    <div class="stat-label">Weak Passwords</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger">
+                        <i class="fas fa-skull-crossbones"></i>
+                    </div>
+                    <div class="stat-number" id="breachedCount">-</div>
+                    <div class="stat-label">Breached Passwords</div>
+                </div>
+            </div>
+
+            <div class="breach-actions">
+                <button class="btn btn-scan" id="scanBtn">
+                    <i class="fas fa-search"></i>
+                    <span>Start Security Scan</span>
+                </button>
+                <button class="btn btn-outline" id="rescanBtn" style="display: none;">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Scan Again</span>
+                </button>
+            </div>
+
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText" style="display: none;">
+                Initializing scan...
+            </div>
+
+            <div class="breach-results" id="breachResults">
+                <!-- Results will be populated here -->
+            </div>
+        `;
+
+        // Add event listeners for the new elements
+        setTimeout(() => {
+            const scanBtn = view.querySelector('#scanBtn');
+            const rescanBtn = view.querySelector('#rescanBtn');
+            
+            if (scanBtn) {
+                scanBtn.addEventListener('click', () => this.startScan());
+            }
+            if (rescanBtn) {
+                rescanBtn.addEventListener('click', () => this.startScan());
+            }
+        }, 100);
+
+        return view;
+    }
+
+    async sha1Hash(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-1', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex.toUpperCase();
+    }
+    async checkPasswordBreaches(password) {
+        try {
+            const hash = await this.sha1Hash(password);
+            const prefix = hash.substring(0, 5);
+            const suffix = hash.substring(5);
+
+            //api of have i been pwned
+            
+            const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+                method: 'GET',
+                headers: {
+                    'User-Agent': 'SecurePass-PasswordManager'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.text();
+            const hashes = data.split('\n');
+            
+            for (let hashLine of hashes) {
+                const [hashSuffix, count] = hashLine.trim().split(':');
+                if (hashSuffix === suffix) {
+                    return {
+                        breached: true,
+                        count: parseInt(count, 10)
+                    };
+                }
+            }
+
+            return {
+                breached: false,
+                count: 0
+            };
+        } catch (error) {
+            console.error('Error checking password breaches:', error);
+            // Return null to indicate API error, not breach status
+            return null;
+        }
+    }
+
+    async checkEmailBreaches(email) {
+        try {
+            const baseUrl = 'https://haveibeenpwned.com/api/v3/breachedaccount/';
+            const headers = {
+                'User-Agent': 'SecurePass-PasswordManager'
+            };
+
+            
+            //doenst work because of the requirement of a paid api key 
+            if (this.hibpApiKey) {
+                headers['hibp-api-key'] = this.hibpApiKey;
+            }
+
+            const response = await fetch(`${baseUrl}${encodeURIComponent(email)}?truncateResponse=false`, {
+                method: 'GET',
+                headers: headers
+            });
+
+            if (response.status === 404) {
+                // No breaches found
+                return {
+                    breached: false,
+                    breaches: []
+                };
+            }
+
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error('Rate limit exceeded. Please try again later.');
+                }
+                if (response.status === 401) {
+                    throw new Error('API key required for detailed breach information.');
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const breaches = await response.json();
+            return {
+                breached: true,
+                breaches: breaches || []
+            };
+        } catch (error) {
+            console.error('Error checking email breaches:', error);
+            return null;
+        }
+    }
+
+    loadBreachData() {
+        // Load cached breach data if available
+        const storedData = localStorage.getItem('breachScanResults');
+        const lastScanDate = localStorage.getItem('lastScanDate');
+        
+        if (storedData && lastScanDate) {
+            const daysSinceLastScan = (Date.now() - new Date(lastScanDate).getTime()) / (1000 * 60 * 60 * 24);
+            if (daysSinceLastScan < 7) { // Use cached data if less than 7 days old
+                this.breachData = JSON.parse(storedData);
+                return;
+            }
+        }
+        
+        // If no cached data or data is old, initialize empty
+        this.breachData = [];
+    }
+
+    getStoredPasswords() {
+        // Get passwords from the global passwords array (from your existing code)
+        if (typeof passwords !== 'undefined' && passwords.length > 0) {
+            return passwords.map(pwd => ({
+                serviceName: pwd.service,
+                username: pwd.username,
+                password: pwd.password,
+                url: pwd.website_url || ''
+            }));
+        }
+        
+        // Fallback to sample data for testing
+        return [
+            { serviceName: 'Gmail', username: 'user@gmail.com', password: 'password123' },
+            { serviceName: 'GitHub', username: 'developer', password: 'SecureP@ss456' },
+            { serviceName: 'Facebook', username: 'user123@email.com', password: 'MyFacebookPass' }
+        ];
+    }
+
+    async generateRealBreachData() {
+        const storedPasswords = this.getStoredPasswords();
+        const breachData = [];
+
+        for (let i = 0; i < storedPasswords.length; i++) {
+            const pwd = storedPasswords[i];
+            
+            // Update progress
+            this.updateScanProgress((i / storedPasswords.length) * 100, 
+                `Checking ${pwd.serviceName}...`);
+
+            // Check password against HIBP
+            const passwordCheck = await this.checkPasswordBreaches(pwd.password);
+            
+            // Add delays to make sure the api call doesnt fail
+            await this.delay(200);
+
+            // Check email against HIBP (not included as the api key is paid)
+            let emailCheck = null;
+            if (pwd.username.includes('@')) {
+                emailCheck = await this.checkEmailBreaches(pwd.username);
+                await this.delay(200);
+            }
+
+            let status, details;
+            
+            if (passwordCheck === null) {
+                // API error occurred
+                status = 'warning';
+                details = 'Unable to verify password security. Check your internet connection.';
+            } else if (passwordCheck.breached) {
+                status = 'danger';
+                details = `This password has been found in ${passwordCheck.count.toLocaleString()} data breaches. Change it immediately!`;
+            } else {
+                // Password not breached, but check if email was breached
+                if (emailCheck && emailCheck.breached) {
+                    status = 'warning';
+                    const breachNames = emailCheck.breaches.slice(0, 3).map(b => b.Name).join(', ');
+                    details = `Your email was found in breaches: ${breachNames}${emailCheck.breaches.length > 3 ? ' and others' : ''}. Consider changing this password as a precaution.`;
+                } else if (emailCheck === null && pwd.username.includes('@')) {
+                    status = 'safe';
+                    details = 'Password appears secure, but email breach status could not be verified.';
+                } else {
+                    status = 'safe';
+                    details = 'No breaches detected. This password appears to be secure.';
+                }
+            }
+
+            breachData.push({
+                serviceName: pwd.serviceName,
+                username: pwd.username,
+                status: status,
+                details: details,
+                passwordBreached: passwordCheck ? passwordCheck.breached : null,
+                passwordBreachCount: passwordCheck ? passwordCheck.count : 0,
+                emailBreached: emailCheck ? emailCheck.breached : null,
+                emailBreaches: emailCheck ? emailCheck.breaches : [],
+                lastChecked: new Date().toISOString()
+            });
+        }
+
+        return breachData;
+    }
+
+    updateScanProgress(percentage, message) {
+        this.scanProgress = percentage;
+        
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        
+        if (progressFill) {
+            progressFill.style.width = `${percentage}%`;
+        }
+        
+        if (progressText) {
+            progressText.textContent = message;
+        }
+    }
+
+    updateStats() {
+        const safeCount = this.breachData.filter(item => item.status === 'safe').length;
+        const warningCount = this.breachData.filter(item => item.status === 'warning').length;
+        const breachedCount = this.breachData.filter(item => item.status === 'danger').length;
+
+        const safeCountEl = document.getElementById('safeCount');
+        const warningCountEl = document.getElementById('warningCount');
+        const breachedCountEl = document.getElementById('breachedCount');
+
+        if (safeCountEl) safeCountEl.textContent = safeCount;
+        if (warningCountEl) warningCountEl.textContent = warningCount;
+        if (breachedCountEl) breachedCountEl.textContent = breachedCount;
+    }
+
+    async startScan() {
+        if (this.isScanning) return;
+
+        this.isScanning = true;
+        this.scanProgress = 0;
+
+        const scanBtn = document.getElementById('scanBtn');
+        const rescanBtn = document.getElementById('rescanBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const breachResults = document.getElementById('breachResults');
+
+        // Update UI
+        if (scanBtn) {
+            scanBtn.classList.add('scanning');
+            scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Scanning...</span>';
+        }
+
+        if (progressBar) progressBar.style.display = 'block';
+        if (progressText) progressText.style.display = 'block';
+        if (breachResults) {
+            breachResults.innerHTML = '';
+            breachResults.classList.remove('active');
+        }
+
+        try {
+            // Perform real breach detection
+            this.updateScanProgress(0, 'Initializing security scan...');
+            await this.delay(500);
+            
+            this.updateScanProgress(10, 'Connecting to Have I Been Pwned...');
+            await this.delay(500);
+            
+            // Generate real breach data
+            this.breachData = await this.generateRealBreachData();
+            
+            this.updateScanProgress(100, 'Finalizing security report...');
+            await this.delay(500);
+            
+        } catch (error) {
+            console.error('Scan error:', error);
+            this.updateScanProgress(100, 'Scan completed with errors');
+        }
+        this.completeScan();
+    }
+
+    completeScan() {
+        this.isScanning = false;
+
+        const scanBtn = document.getElementById('scanBtn');
+        const rescanBtn = document.getElementById('rescanBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+
+        // Hide progress
+        if (progressBar) progressBar.style.display = 'none';
+        if (progressText) progressText.style.display = 'none';
+
+        // Update buttons
+        if (scanBtn) {
+            scanBtn.classList.remove('scanning');
+            scanBtn.style.display = 'none';
+        }
+        if (rescanBtn) {
+            rescanBtn.style.display = 'inline-flex';
+        }
+        this.updateStats();
+        this.displayResults();
+
+        // Save results to localStorage
+        localStorage.setItem('breachScanResults', JSON.stringify(this.breachData));
+        localStorage.setItem('lastScanDate', new Date().toISOString());
+
+        // Show completion notification
+        const breachedCount = this.breachData.filter(item => item.status === 'danger').length;
+        if (breachedCount > 0) {
+            this.showNotification(`Scan complete: ${breachedCount} breached passwords found!`, 'error');
+        } else {
+            this.showNotification('Scan complete: No breached passwords detected!', 'success');
+        }
+    }
+
+    displayResults() {
+        const breachResults = document.getElementById('breachResults');
+        if (!breachResults) return;
+
+        breachResults.innerHTML = '';
+        
+        // Sort results by risk level
+        const sortedResults = [...this.breachData].sort((a, b) => {
+            const riskOrder = { 'danger': 0, 'warning': 1, 'safe': 2 };
+            return riskOrder[a.status] - riskOrder[b.status];
+        });
+
+        sortedResults.forEach(item => {
+            const resultCard = document.createElement('div');
+            resultCard.className = `breach-result-card ${item.status}`;
+            
+            const statusText = {
+                'safe': 'Secure',
+                'warning': 'At Risk',
+                'danger': 'Breached'
+            };
+
+            const statusIcon = {
+                'safe': 'fas fa-check-circle',
+                'warning': 'fas fa-exclamation-triangle',
+                'danger': 'fas fa-skull-crossbones'
+            };
+
+            // Additional details for breach information
+            let additionalInfo = '';
+            if (item.passwordBreached) {
+                additionalInfo += `<br><strong>Password seen in breaches:</strong> ${item.passwordBreachCount.toLocaleString()} times`;
+            }
+            if (item.emailBreached && item.emailBreaches.length > 0) {
+                const breachNames = item.emailBreaches.slice(0, 2).map(b => b.Name).join(', ');
+                additionalInfo += `<br><strong>Email found in:</strong> ${breachNames}${item.emailBreaches.length > 2 ? ` and ${item.emailBreaches.length - 2} others` : ''}`;
+            }
+
+            resultCard.innerHTML = `
+                <div class="breach-result-header">
+                    <div class="breach-service-name">
+                        <i class="${statusIcon[item.status]}" style="margin-right: 0.5rem;"></i>
+                        ${item.serviceName}
+                    </div>
+                    <div class="breach-status ${item.status}">
+                        ${statusText[item.status]}
+                    </div>
+                </div>
+                <div class="breach-details">
+                    <strong>Account:</strong> ${item.username}<br>
+                    <strong>Status:</strong> ${item.details}${additionalInfo}<br>
+                    <strong>Last Checked:</strong> ${new Date(item.lastChecked).toLocaleString()}
+                </div>
+            `;
+
+            breachResults.appendChild(resultCard);
+        });
+
+        breachResults.classList.add('active');
+    }
+
+    showNotification(message, type = 'success') {
+        // Create temporary notification
+        const notification = document.createElement('div');
+        const bgColor = type === 'error' ? '#dc3545' : '#28a745';
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${bgColor};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.4s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+}
+
+// Enhanced BreachUtils with real HIBP integration
+const BreachUtils = {
+    // Enhanced password strength checking
+    checkPasswordStrength(password) {
+        let score = 0;
+        const checks = {
+            length: password.length >= 8,
+            longLength: password.length >= 12,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            numbers: /\d/.test(password),
+            symbols: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+            notCommon: !this.isCommonPassword(password)
+        };
+
+        Object.values(checks).forEach(check => {
+            if (check) score++;
+        });
+
+        if (score < 4) return 'weak';
+        if (score < 6) return 'medium';
+        return 'strong';
+    },
+
+    // Enhanced common password check
+    isCommonPassword(password) {
+        const commonPasswords = [
+            'password', '123456', '123456789', 'qwerty', 'abc123',
+            'password123', 'admin', 'letmein', 'welcome', 'monkey',
+            'dragon', 'password1', '123123', 'welcome123', 'sunshine',
+            'princess', 'azerty', 'trustno1', 'football'
+        ];
+        return commonPasswords.includes(password.toLowerCase());
+    },
+
+    // Real breach database lookup using HIBP
+    async checkAgainstBreaches(password) {
+        try {
+            const breachDetection = new BreachDetection();
+            const result = await breachDetection.checkPasswordBreaches(password);
+            
+            if (result === null) {
+                return {
+                    error: true,
+                    message: 'Unable to check against breach database'
+                };
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('Error checking breaches:', error);
+            return {
+                error: true,
+                message: error.message
+            };
+        }
+    },
+
+    // Generate security recommendations based on real breach data
+    generateRecommendations(breachData) {
+        const recommendations = [];
+        
+        const breachedCount = breachData.filter(item => item.status === 'danger').length;
+        const warningCount = breachData.filter(item => item.status === 'warning').length;
+        const totalPasswords = breachData.length;
+        
+        if (breachedCount > 0) {
+            recommendations.push({
+                priority: 'critical',
+                title: 'Change Breached Passwords Immediately',
+                description: `${breachedCount} of your passwords have been found in data breaches. These should be changed immediately to prevent account compromise.`,
+                action: 'Change passwords now',
+                count: breachedCount
+            });
+        }
+        
+        if (warningCount > 0) {
+            recommendations.push({
+                priority: 'high',
+                title: 'Review At-Risk Accounts',
+                description: `${warningCount} accounts may be at risk due to weak passwords or email breaches. Consider strengthening these passwords.`,
+                action: 'Review and strengthen',
+                count: warningCount
+            });
+        }
+        
+        recommendations.push({
+            priority: 'medium',
+            title: 'Enable Two-Factor Authentication',
+            description: 'Add an extra layer of security to your most important accounts.',
+            action: 'Enable 2FA'
+        });
+        
+        if (totalPasswords < 10) {
+            recommendations.push({
+                priority: 'low',
+                title: 'Add More Accounts to Monitor',
+                description: 'Consider adding more accounts to your password manager for comprehensive security monitoring.',
+                action: 'Add accounts'
+            });
+        }
+        
+        return recommendations;
+    }
+};
         // Application State
         let passwords = [];
         let currentEditId = null;
@@ -7,6 +678,11 @@
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
+            const breachDetection = new BreachDetection();
+    
+    // Make it globally accessible
+            window.breachDetection = breachDetection;
+            window.BreachUtils = BreachUtils;
             setupEventListeners();
         });
 
