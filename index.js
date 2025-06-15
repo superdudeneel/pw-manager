@@ -5,6 +5,8 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const dotenv = require('dotenv');
+const nodemailer = require('nodemailer');
+
 const User = require('./models/Usermodel');
 const Password = require('./models/Passwordmodel');
 
@@ -13,12 +15,18 @@ dotenv.config();
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
-const { Resend } = require('resend');
+
 
 const app = express();
 const port = 8000;
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.MAIL,
+      pass: process.env.YOUR_APP_PASS  // Not your Gmail password! Use an App Password.
+    }
+});
 
 app.use(session({
     secret: 'your-secret-key', // Change this to a random string
@@ -282,10 +290,10 @@ app.post('/forgot-pass', async (req, res) => {
 
         const resetLink = `http://localhost:8000/reset-password?token=${token}`;
 
-        const { data, error } = await resend.emails.send({
-            from: 'onboarding@resend.dev',
-            to: [email],
-            subject: 'Password Reset Request',
+        const mailoptions = {
+            from: '"Neel from secure vault" <dudemrwonderful@gmail.com>',
+            to: email,
+            subject: 'password reset email',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <h2>Password Reset Request</h2>
@@ -296,14 +304,14 @@ app.post('/forgot-pass', async (req, res) => {
                     <p>If you didn't request this password reset, please ignore this email.</p>
                 </div>
             `,
-        });
-        if (error) {
-            console.error('Email error:', error);
-            return res.send('Error sending reset email. <a href="/forgot-pass">Try again</a>');
         }
-
-        console.log('Reset email sent:', data);
-        return res.redirect('/email-sent');
+        transporter.sendMail(mailoptions, (error, info) => {
+            if (error) {
+              return console.error('Error sending mail:', error);
+            }
+            return res.redirect('/email-sent');
+        });
+        
         
     } catch (error) {
         console.error('Forgot password error:', error);
@@ -372,11 +380,11 @@ app.post('/reset-pass', async (req, res) => {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         // Update user's password and clear reset token
-        await User.findByIdAndUpdate(user._id, {
-            password: hashedPassword,
-            resetToken: undefined,
-            resetTokenExpiration: undefined
-        });
+        user.password = hashedPassword;
+        user.resetToken = undefined;
+        user.resetTokenExpiration = undefined;
+        await user.save();
+
 
         return res.json({ 
             success: true, 

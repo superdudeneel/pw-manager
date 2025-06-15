@@ -1,0 +1,278 @@
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .reset-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .reset-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .reset-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .reset-header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .reset-header p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: black;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .password-input-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 16px;
+            padding: 5px;
+            border-radius: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .toggle-password:hover {
+            color: #667eea;
+        }
+
+        .password-requirements {
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .password-requirements h4 {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .requirement {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+
+        .requirement::before {
+            content: '✗';
+            color: #e74c3c;
+            margin-right: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .requirement.valid {
+            color: #27ae60;
+        }
+
+        .requirement.valid::before {
+            content: '✓';
+            color: #27ae60;
+        }
+
+        .password-strength {
+            margin-top: 10px;
+        }
+
+        .strength-bar {
+            height: 6px;
+            background: #e1e5e9;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .strength-weak { background: #e74c3c; }
+        .strength-fair { background: #f39c12; }
+        .strength-good { background: #3498db; }
+        .strength-strong { background: #27ae60; }
+
+        .strength-text {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+            padding: 10px;
+            background: #fdf2f2;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-message {
+            color: #27ae60;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+            padding: 10px;
+            background: #f2f8f5;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #000000, #434343);
+
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .reset-btn:active {
+            transform: translateY(0);
+        }
+
+        .reset-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-loader {
+            display: none;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff40;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .reset-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .reset-header h1 {
+                font-size: 24px;
+            }
+        }
