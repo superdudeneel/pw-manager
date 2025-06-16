@@ -808,6 +808,10 @@
                 padding: 6rem 0;
             }
 
+            .nav-actions .btn {
+                display: none;
+            }
+
             .nav-links {
                 display: none;
             }
@@ -865,6 +869,7 @@
         }
 
         @media (max-width: 480px) {
+            
             .container {
                 padding: 0 1.5rem;
             }
