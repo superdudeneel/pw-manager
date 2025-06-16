@@ -293,7 +293,7 @@ app.post('/forgot-pass', async (req, res) => {
         const resetLink = `${baseUrl}/reset-password?token=${token}`;
 
         const mailoptions = {
-            from: '"Neel from secure vault" <dudemrwonderful@gmail.com>',
+            from: '"Neel from secure vault" <process.env.MAIL>',
             to: email,
             subject: 'password reset email',
             html: `
