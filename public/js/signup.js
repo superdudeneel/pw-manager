@@ -44,24 +44,47 @@ function calculatePasswordStrength(password) {
     return strength;
 }
 
-form.addEventListener('submit', (event) => {
+form.addEventListener('submit', async (event) => {
     event.preventDefault(); // Stop the default form action
+    const formData = new FormData(form);
+    const data = {
+        username: formData.get("username"),
+        email: formData.get('email'),
+        password: formData.get("password")
 
-    const button = document.querySelector('.signup-btn');
-    const originalText = button.textContent;
+    };
+    const response = await fetch('/signup', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    })
+    const result = await response.json();
+    if(!result.success){
+        Swal.fire({
+            title: 'Oops...',
+            text: result.message,
+            icon: 'error',
+            confirmButtonText: 'Try Again',
+            customClass: {
+              confirmButton: 'my-confirm-button',
+            },
+            buttonsStyling: false,
+            showCloseButton: true
+        });
+    }
+    else{
+        Swal.fire({
+              title: 'Success',
+              text: result.message,
+              icon: 'success',
+              confirmButtonText: 'OK',
+              timer: 1420,
+              customClass: {
+                confirmButton: 'my-confirm-button',
+              },
+            }).then(()=>{
+                window.location.href = result.redirect;
 
-    button.textContent = 'Creating account...';
-    button.disabled = true;
-
-    setTimeout(() => {
-        successMessage.classList.add('show');
-        button.textContent = originalText;
-        button.disabled = false;
-
-        // Auto-submit the form after a short delay
-        setTimeout(() => {
-            form.submit();
-        }, 2000); // Submit 2 seconds after showing message
-
-    }, 1000); // Show success message after 1 second
+            })
+    }
 });

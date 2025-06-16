@@ -161,6 +161,17 @@ app.get('/reset-password', async (req, res)=>{
 
 app.post('/signup', async (req, res)=>{
     const { username, email, password } = req.body;
+
+    const existingusername = await User.findOne({username});
+    const existingmail = await User.findOne({email});
+
+    if(existingusername){
+        return res.json({success: false, message: 'user already exists'});
+
+    }
+    if(existingmail){
+        return res.json({success:false, message: 'user already exists'});
+    }
     
     try {
         const newpassword = await bcrypt.hash(password, 10);
@@ -169,7 +180,7 @@ app.post('/signup', async (req, res)=>{
             email,
             password: newpassword,
         });
-        return res.redirect('/login');
+        return res.json({success: true, message: 'Account created succesfully. You will be redirected shortly', redirect: '/login'});
     } catch (error) {
         console.error('Signup error:', error);
         return res.send('Error creating account. <a href="/signup">Try again</a>');
@@ -291,9 +302,11 @@ app.post('/forgot-pass', async (req, res) => {
 
         const baseUrl = process.env.BASE_URL || 'http://localhost:8000';
         const resetLink = `${baseUrl}/reset-password?token=${token}`;
+        const mail = process.env.MAIL;
+
 
         const mailoptions = {
-            from: '"Neel from secure vault" <process.env.MAIL>',
+            from: `"Neel from secure vault" <${mail}>`,
             to: email,
             subject: 'password reset email',
             html: `
