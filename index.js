@@ -292,7 +292,7 @@ app.post('/forgot-pass', async (req, res) => {
 
         // Generate reset token and set expiration (1 hour from now)
         const token = crypto.randomBytes(32).toString('hex');
-        const resetTokenExpiration = Date.now() + 300000; // 5 minutes
+        const resetTokenExpiration = Date.now() + 20 * 60 * 1000;// 20 min
 
         // Save token and expiration to user
         await User.findByIdAndUpdate(user._id, {
@@ -315,7 +315,7 @@ app.post('/forgot-pass', async (req, res) => {
                     <p>You requested a password reset for your account.</p>
                     <p>Click the link below to reset your password:</p>
                     <a href="${resetLink}" style="background-color: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin: 20px 0;">Reset Password</a>
-                    <p>This link will expire in 5 min.</p>
+                    <p>This link will expire in 20 min.</p>
                     <p>If you didn't request this password reset, please ignore this email.</p>
                 </div>
             `,
