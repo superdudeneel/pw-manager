@@ -213,15 +213,15 @@ app.post('/login', async (req, res)=>{
             // Set a cookie with the username
             res.cookie('username', user.username, { 
                 maxAge: 24 * 60 * 60 * 1000, // 24 hours
-                httpOnly: false // So client-side JS can read it
+                httpOnly: true // So client-side JS can read it
             });
             res.cookie('email',user.email, { 
                 maxAge: 24 * 60 * 60 * 1000,
-                httpOnly: false
+                httpOnly: true
             });
             res.cookie('sessionID', req.sessionID, {
                 maxAge: 24 * 60 * 60 * 1000,
-                httpOnly: false
+                httpOnly: true
             })
 
             return res.json({ success: true, redirect: '/app' });
@@ -250,15 +250,15 @@ app.post('/master-pass',async (req, res)=>{
     // Set cookies with the new master_password
     res.cookie('username', user.username, { 
         maxAge: 24 * 60 * 60 * 1000,
-        httpOnly: false
+        httpOnly: true
     });
     res.cookie('email', user.email, { 
         maxAge: 24 * 60 * 60 * 1000,
-        httpOnly: false
+        httpOnly: true
     });
     res.cookie('sessionID', req.sessionID, {
         maxAge: 24 * 60 * 60 * 1000,
-        httpOnly: false
+        httpOnly: true
     });
 
     return res.redirect('/app');
