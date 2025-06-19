@@ -1,38 +1,44 @@
 # 🔐 Password Manager
 
-A simple, secure password manager web application built with Node.js, Express, and vanilla HTML/CSS/JavaScript. Store, retrieve, and manage your service credentials securely with a session-based master password.
+A lightweight, secure password manager built with Node.js, Express, and vanilla JavaScript. Store, retrieve, and manage your credentials locally with session-based authentication and strong encryption.
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Active-brightgreen" />
+  <img src="https://img.shields.io/github/license/superdudeneel/pw-manager" />
+  <img src="https://img.shields.io/badge/Security-AES--256%20%2B%20bcrypt-blue" />
+</p>
 
 ---
 
-## 🚀 Features
+## ✨ Features
 
-- 🔑 Master password login
-- 💾 Add, edit, delete stored passwords
-- 🔍 Search and filter by service
-- 📋 Copy to clipboard feature
-- 🔐 Passwords encrypted in the database
-- 🕒 Session-based authentication
-- 🛡️ Breach Detection Enabled
+- 🔐 **Master Password Authentication** – Secure access to all stored credentials.
+- 💾 **CRUD Support** – Add, edit, delete services and credentials.
+- 🔍 **Search & Filter** – Quickly find saved credentials by service name.
+- 📋 **One-click Copy** – Easily copy passwords to clipboard.
+- 🔐 **End-to-End Encryption** – AES-256 encryption for stored passwords.
+- 🔒 **Hashed Authentication** – Master password stored using bcrypt.
+- 🛡️ **Session-based Security** – Safe login sessions using cookies.
+- 🚨 **Breach Detection** – (Optional) Integration-ready for checking password leaks.
 
 ---
 
 ## 🧱 Tech Stack
 
-- **Backend:** Node.js, Express
-- **Frontend:** HTML, CSS, JavaScript
-- **Database:** MongoDB (via Mongoose)
-- **Authentication:** Session + Master password
-- **Security:** bcrypt hashing, AES-256 encryption, dotenv
+| Layer        | Tech                           |
+|--------------|--------------------------------|
+| **Backend**  | Node.js, Express               |
+| **Frontend** | HTML, CSS, Vanilla JavaScript  |
+| **Database** | MongoDB with Mongoose          |
+| **Security** | bcrypt, AES-256, dotenv        |
+| **Auth**     | Session-based authentication   |
 
 ---
 
-## 🛠 Setup Instructions
+## ⚙️ Setup Instructions
 
 ### 1. Clone the repository
+
 ```bash
 git clone https://github.com/superdudeneel/pw-manager.git
 cd pw-manager
-touch .env
-npm install
-npm start
-
