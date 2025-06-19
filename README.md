@@ -42,3 +42,5 @@ A lightweight, secure password manager built with Node.js, Express, and vanilla 
 ```bash
 git clone https://github.com/superdudeneel/pw-manager.git
 cd pw-manager
+npm install
+
